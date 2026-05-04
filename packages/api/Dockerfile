@@ -16,8 +16,8 @@ COPY packages/db/package.json     packages/db/
 COPY packages/api/package.json    packages/api/
 COPY packages/admin/package.json  packages/admin/
 
-# Remove lockfile to force fresh resolution for the current architecture (x64).
-RUN rm -f package-lock.json && npm install --workspaces --include-workspace-root --no-audit --no-fund
+# Force fresh resolution and ignore platform conflicts.
+RUN rm -f package-lock.json && npm cache clean --force && npm install --workspaces --include-workspace-root --no-audit --no-fund --force
 
 # ===== Stage 2: runtime =====
 FROM node:20-alpine AS runtime

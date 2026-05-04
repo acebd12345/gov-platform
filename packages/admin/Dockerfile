@@ -11,7 +11,7 @@ COPY packages/db/package.json     packages/db/
 COPY packages/api/package.json    packages/api/
 COPY packages/admin/package.json  packages/admin/
 
-RUN rm -f package-lock.json && npm install --workspaces --include-workspace-root --no-audit --no-fund
+RUN rm -f package-lock.json && npm cache clean --force && npm install --workspaces --include-workspace-root --no-audit --no-fund --force
 
 # ===== Stage 2: build =====
 FROM node:20-alpine AS build
