@@ -9,7 +9,7 @@ PROJECT_ID="doit-digiiinova-website"
 REGION="asia-east1"
 ZONE="asia-east1-b"
 VM_NAME="gov-platform-prod"
-MACHINE_TYPE="e2-standard-4" # 4 vCPU / 16GB
+MACHINE_TYPE="e2-medium" # 2 vCPU / 4GB (節省成本方案)
 IP_NAME="gov-platform-static-ip"
 
 echo "開始執行 GCP 自動化設定 (Project: $PROJECT_ID)..."

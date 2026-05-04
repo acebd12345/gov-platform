@@ -16,8 +16,8 @@ COPY packages/db/package.json     packages/db/
 COPY packages/api/package.json    packages/api/
 COPY packages/admin/package.json  packages/admin/
 
-# Use npm ci against the root lockfile so versions match exactly.
-RUN npm ci --workspaces --include-workspace-root --no-audit --no-fund
+# Use npm install to allow platform-specific dependency resolution.
+RUN npm install --workspaces --include-workspace-root --no-audit --no-fund
 
 # ===== Stage 2: runtime =====
 FROM node:20-alpine AS runtime

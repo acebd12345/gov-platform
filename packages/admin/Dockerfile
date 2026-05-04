@@ -11,7 +11,7 @@ COPY packages/db/package.json     packages/db/
 COPY packages/api/package.json    packages/api/
 COPY packages/admin/package.json  packages/admin/
 
-RUN npm ci --workspaces --include-workspace-root --no-audit --no-fund
+RUN npm install --workspaces --include-workspace-root --no-audit --no-fund
 
 # ===== Stage 2: build =====
 FROM node:20-alpine AS build
