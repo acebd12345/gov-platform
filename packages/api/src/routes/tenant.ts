@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import bcryptjs from 'bcryptjs';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { db, publicSchema, createTenantSchema } from '@gov/db';
@@ -141,11 +142,22 @@ app.post(
 
     // If email is provided instead of userId, look up the user
     if (!resolvedUserId && body.email) {
-      const user = await db.query.users.findFirst({
+      let user = await db.query.users.findFirst({
         where: (u, { eq }) => eq(u.email, body.email!),
       });
+
+      // NEW: If user not found, create them with a default password "Welcome123"
       if (!user) {
-        return c.json({ error: { code: 'NOT_FOUND', message: `找不到使用者：${body.email}` } }, 404);
+        const hashedPassword = await bcryptjs.hash('Welcome123', 10);
+        const [newUser] = await db
+          .insert(publicSchema.users)
+          .values({
+            email: body.email!,
+            hashedPassword,
+            isSuperAdmin: false,
+          })
+          .returning();
+        user = newUser;
       }
       resolvedUserId = user.id;
     }
