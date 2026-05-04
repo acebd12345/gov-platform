@@ -40,16 +40,16 @@ async function test(method, path) {
 }
 
 async function main() {
-  console.log("\n╔════════════════════════════════════╗");
-  console.log("║  Content Delivery API Test         ║");
-  console.log(`╚════════════════════════════════════╝`);
+  console.log("\n+------------------------------------+");
+  console.log("|  Content Delivery API Test         |");
+  console.log("+------------------------------------+");
   console.log(`\nBase: ${BASE_URL}   Tenant: ${TENANT_ID}\n`);
 
   let pass = 0;
   for (const ep of endpoints) {
     const r = await test(ep.method, ep.path);
-    const icon = r.ok ? "✅" : "❌";
-    console.log(`${icon}  ${ep.method} ${ep.path}`);
+    const mark = r.ok ? "PASS" : "FAIL";
+    console.log(`[${mark}]  ${ep.method} ${ep.path}`);
     console.log(`    → HTTP ${r.status}  |  ${ep.desc}`);
     if (r.ok && r.data?.data !== undefined) {
       const preview = JSON.stringify(r.data.data).slice(0, 80);
