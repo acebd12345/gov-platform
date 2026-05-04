@@ -26,6 +26,14 @@ export const tenantMiddleware = createMiddleware<{
     slug = headerTenant;
   }
 
+  // 2. Query parameter (for IP-based testing)
+  if (!slug) {
+    const queryTenant = c.req.query('tenant');
+    if (queryTenant) {
+      slug = queryTenant;
+    }
+  }
+
   // 2. Subdomain detection
   if (!slug) {
     const host = c.req.header('host') ?? '';

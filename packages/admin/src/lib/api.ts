@@ -8,7 +8,20 @@ interface FetchOptions extends RequestInit {
  * Typed API client for communicating with the gov-platform API.
  */
 export async function api<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { tenant = 'portal', ...fetchOpts } = options;
+  // Auto-detect tenant from URL if not provided
+  let detectedTenant = options.tenant;
+  if (!detectedTenant && typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    detectedTenant = params.get('tenant') || 'portal';
+  } else if (!detectedTenant) {
+    detectedTenant = 'portal';
+  }
+
+  const { tenant = detectedTenant, ...fetchOpts } = options;
+
+  // Append tenant to query string to ensure middleware catches it
+  const url = new URL(`${API_BASE}${path}`);
+  url.searchParams.set('tenant', tenant);
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -24,7 +37,7 @@ export async function api<T>(path: string, options: FetchOptions = {}): Promise<
     }
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(url.toString(), {
     ...fetchOpts,
     headers,
   });
