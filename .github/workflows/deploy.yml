@@ -1,0 +1,48 @@
+name: Deploy to GCP VM
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Auth to GCP
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Set up Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v2'
+
+    - name: Configure Docker
+      run: |
+        gcloud auth configure-docker asia-east1-docker.pkg.dev --quiet
+
+    - name: Build and Push Docker Images
+      run: |
+        # 使用 Artifact Registry 作為私有映像檔庫
+        TAG=asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/api:latest
+        docker build -t $TAG -f packages/api/Dockerfile .
+        docker push $TAG
+        
+        ADMIN_TAG=asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/admin:latest
+        docker build -t $ADMIN_TAG -f packages/admin/Dockerfile .
+        docker push $ADMIN_TAG
+
+    - name: Deploy to VM via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.GCP_VM_IP }}
+        username: ${{ secrets.GCP_VM_USER }}
+        key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+        script: |
+          cd /home/${{ secrets.GCP_VM_USER }}/gov-platform
+          git pull origin main
+          # 更新正式環境的 Docker Image 並重啟服務
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
