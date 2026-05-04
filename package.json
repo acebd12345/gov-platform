@@ -1,0 +1,26 @@
+{
+  "name": "gov-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "臺北市政府多租戶網站平台",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=packages/api",
+    "dev:admin": "npm run dev --workspace=packages/admin",
+    "db:generate": "npm run generate --workspace=packages/db",
+    "db:push": "npm run push --workspace=packages/db",
+    "db:migrate": "npm run migrate --workspace=packages/db",
+    "db:seed": "npm run seed --workspace=packages/db",
+    "db:setup": "npm run setup --workspace=packages/db",
+    "lint": "eslint packages/*/src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@esbuild/linux-arm64": "^0.28.0"
+  }
+}

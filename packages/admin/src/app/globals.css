@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  /* Government Blue palette — professional, trustworthy */
+  --color-brand: #0C5299;
+  --color-brand-light: #E8F0F8;
+  --color-brand-dark: #083B6E;
+  --color-accent: #D4A017;
+  --color-surface: #F8FAFB;
+  --color-surface-alt: #FFFFFF;
+  --color-text: #1A1D23;
+  --color-text-muted: #6B7280;
+  --color-border: #E2E8F0;
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+
+  --font-display: 'Noto Sans TC', system-ui, sans-serif;
+  --font-body: 'Noto Sans TC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
