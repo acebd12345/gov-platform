@@ -6,6 +6,7 @@ import { eq, and, desc, sql, asc, count } from 'drizzle-orm';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import type { TenantContext } from '../middleware/tenant.js';
 import type { AuthContext } from '../middleware/auth.js';
+import { notifyRevalidate } from '../lib/revalidate.js';
 
 type Env = { Variables: { tenant: TenantContext; auth: AuthContext } };
 
@@ -547,6 +548,15 @@ async function changePageStatus(c: any, fromStatus: string, toStatus: string, ac
     resourceId: pageId,
     afterSnapshot: result.page,
   });
+
+  // Trigger ISR on the public web frontend when publish state changes.
+  if (toStatus === 'published' || fromStatus === 'published') {
+    void notifyRevalidate({
+      tenantSlug: tenant.tenantSlug,
+      type: result.page.type,
+      slug: result.page.slug,
+    });
+  }
 
   return c.json({ data: result.page });
 }

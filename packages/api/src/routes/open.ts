@@ -357,6 +357,14 @@ app.post('/import-culture', async (c) => {
     return c.json({ error: { message: '此操作僅限文化局租戶' } }, 403);
   }
 
+  // 1. Get Admin User ID for authorship
+  const [adminUser] = await db.select({ id: publicSchema.users.id })
+    .from(publicSchema.users)
+    .where(eq(publicSchema.users.email, 'admin@gov.taipei'))
+    .limit(1);
+  
+  const authorId = adminUser?.id || uuidv4(); // Fallback to random if not found
+
   const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.resolve(process.cwd(), 'uploads');
   const xmlUrl = 'https://culture.gov.taipei/OpenData.aspx?SN=EDA96F513B2ADDB2';
   
@@ -387,7 +395,6 @@ app.post('/import-culture', async (c) => {
         ...JSON.parse((videosMatch?.[1] || '[]').replace(/&quot;/g, '"').replace(/&amp;/g, '&')),
       ];
 
-      const mediaIds = [];
       for (const att of allAttachments) {
         try {
           const fileRes = await axios.get(att.url, { responseType: 'arraybuffer' });
@@ -399,18 +406,18 @@ app.post('/import-culture', async (c) => {
           fs.mkdirSync(path.dirname(fullPath), { recursive: true });
           fs.writeFileSync(fullPath, buffer);
 
-          const [m] = await withTenantSchema('culture', async (tx) => {
-            return tx.insert(tenantSchema.media).values({
+          await withTenantSchema('culture', async (tx) => {
+            await tx.insert(tenantSchema.media).values({
               filename: att.title || path.basename(storageKey),
               storageKey,
               cdnUrl: `/uploads/${storageKey}`,
               mimeType: fileRes.headers['content-type'] || 'application/octet-stream',
               fileSizeBytes: buffer.length,
-            }).returning();
+              uploadedBy: authorId,
+            });
           });
-          mediaIds.push(m.id);
         } catch (e) {
-          console.error(`Failed to download attachment: ${att.url}`, e);
+          console.error(`Failed to download attachment: ${att.url}`);
         }
       }
 
@@ -418,17 +425,19 @@ app.post('/import-culture', async (c) => {
       await withTenantSchema('culture', async (tx) => {
         const [page] = await tx.insert(tenantSchema.pages).values({
           slug,
-          title: title.substring(0, 255),
+          type: 'post',
           status: 'published',
+          authorId: authorId,
         }).onConflictDoNothing().returning();
 
         if (page) {
           await tx.insert(tenantSchema.pageVersions).values({
             pageId: page.id,
             title: title.substring(0, 255),
-            content,
+            bodyJson: { html: content },
             status: 'published',
             versionNumber: 1,
+            createdBy: authorId,
           });
         }
       });
@@ -438,6 +447,7 @@ app.post('/import-culture', async (c) => {
 
     return c.json({ data: { message: '匯入完成', count: imported.length, items: imported } });
   } catch (err: any) {
+    console.error('Import error:', err);
     return c.json({ error: { message: err.message } }, 500);
   }
 });

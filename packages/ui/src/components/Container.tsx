@@ -1,18 +1,19 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, ElementType, ReactNode } from 'react';
 
 export function Container({
   children,
-  as: Tag = 'div',
+  as,
   width = 'default',
   className,
   style,
 }: {
   children: ReactNode;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   width?: 'narrow' | 'default' | 'wide';
   className?: string;
   style?: CSSProperties;
 }) {
+  const Tag: ElementType = as ?? 'div';
   const max = width === 'narrow' ? 800 : width === 'wide' ? 1400 : 1200;
   return (
     <Tag

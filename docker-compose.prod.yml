@@ -83,6 +83,9 @@ services:
       S3_BUCKET: ${S3_BUCKET}
       S3_REGION: ${S3_REGION:-us-east-1}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      # Web frontend ISR webhook — when a page is published, API POSTs here
+      WEB_REVALIDATE_URL: http://web:3002/api/revalidate
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
@@ -101,6 +104,27 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+    depends_on:
+      api: { condition: service_started }
+    networks: [backend]
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      args:
+        # Public URL clients use to reach the API (same constraint as admin).
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+        # Server-side fetch path inside the compose network.
+        API_BASE_URL: http://api:4000/api/v1
+    image: gov-platform-web:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      # Server-side ISR fetch goes over the internal network, not the public URL.
+      API_BASE_URL: http://api:4000/api/v1
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
     depends_on:
       api: { condition: service_started }
     networks: [backend]

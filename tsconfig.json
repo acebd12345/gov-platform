@@ -21,6 +21,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "packages/admin"
+    "packages/admin",
+    "packages/web",
+    "packages/ui"
   ]
 }

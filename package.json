@@ -9,6 +9,7 @@
   "scripts": {
     "dev:api": "npm run dev --workspace=packages/api",
     "dev:admin": "npm run dev --workspace=packages/admin",
+    "dev:web": "npm run dev --workspace=packages/web",
     "db:generate": "npm run generate --workspace=packages/db",
     "db:push": "npm run push --workspace=packages/db",
     "db:migrate": "npm run migrate --workspace=packages/db",

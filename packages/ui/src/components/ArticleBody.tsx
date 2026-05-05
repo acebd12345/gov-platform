@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ElementType, ReactNode } from 'react';
 
 /**
  * 渲染 Tiptap JSON 文件結構為 HTML。
@@ -10,30 +10,13 @@ import type { ReactNode } from 'react';
  * 這樣 LCP/SEO 友善。
  */
 
-type TiptapMark =
-  | { type: 'bold' | 'italic' | 'underline' | 'strike' | 'code' }
-  | { type: 'link'; attrs?: { href?: string; target?: string } };
-
-type TiptapNode =
-  | { type: 'doc'; content?: TiptapNode[] }
-  | { type: 'paragraph'; content?: TiptapNode[]; attrs?: { textAlign?: string } }
-  | { type: 'heading'; attrs?: { level?: number; textAlign?: string }; content?: TiptapNode[] }
-  | { type: 'bulletList'; content?: TiptapNode[] }
-  | { type: 'orderedList'; content?: TiptapNode[] }
-  | { type: 'listItem'; content?: TiptapNode[] }
-  | { type: 'blockquote'; content?: TiptapNode[] }
-  | { type: 'horizontalRule' }
-  | { type: 'hardBreak' }
-  | {
-      type: 'image';
-      attrs?: { src?: string; alt?: string; title?: string };
-    }
-  | { type: 'table'; content?: TiptapNode[] }
-  | { type: 'tableRow'; content?: TiptapNode[] }
-  | { type: 'tableCell'; content?: TiptapNode[]; attrs?: Record<string, unknown> }
-  | { type: 'tableHeader'; content?: TiptapNode[]; attrs?: Record<string, unknown> }
-  | { type: 'text'; text: string; marks?: TiptapMark[] }
-  | { type: string; [k: string]: unknown };
+interface AnyNode {
+  type?: string;
+  text?: string;
+  attrs?: Record<string, unknown>;
+  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
+  content?: AnyNode[];
+}
 
 export function ArticleBody({ body }: { body: unknown }) {
   if (!body || typeof body !== 'object') return null;
@@ -47,69 +30,61 @@ export function ArticleBody({ body }: { body: unknown }) {
       }}
     >
       <BodyStyles />
-      {renderNode(body as TiptapNode, 'root')}
+      {renderNode(body as AnyNode, 'root')}
     </div>
   );
 }
 
-function renderNode(node: TiptapNode, key: string): ReactNode {
+function renderChildren(node: AnyNode, parentKey: string): ReactNode {
+  if (!Array.isArray(node.content)) return null;
+  return node.content.map((c, i) => renderNode(c, `${parentKey}-${i}`));
+}
+
+function renderNode(node: AnyNode, key: string): ReactNode {
   if (!node || typeof node !== 'object') return null;
 
   switch (node.type) {
     case 'doc':
-      return (
-        <>
-          {node.content?.map((child, i) => renderNode(child, `${key}-${i}`))}
-        </>
-      );
+      return <>{renderChildren(node, key)}</>;
 
     case 'paragraph': {
-      const align = node.attrs?.textAlign;
+      const align = node.attrs?.textAlign as string | undefined;
       return (
-        <p key={key} style={align ? { textAlign: align as 'left' | 'center' | 'right' } : undefined}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
+        <p
+          key={key}
+          style={align ? { textAlign: align as 'left' | 'center' | 'right' } : undefined}
+        >
+          {renderChildren(node, key)}
         </p>
       );
     }
 
     case 'heading': {
-      const level = Math.min(6, Math.max(1, node.attrs?.level ?? 2));
-      const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-      const align = node.attrs?.textAlign;
+      const levelRaw = (node.attrs?.level as number | undefined) ?? 2;
+      const level = Math.min(6, Math.max(1, levelRaw));
+      const Tag = `h${level}` as ElementType;
+      const align = node.attrs?.textAlign as string | undefined;
       return (
-        <Tag key={key} style={align ? { textAlign: align as 'left' | 'center' | 'right' } : undefined}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
+        <Tag
+          key={key}
+          style={align ? { textAlign: align as 'left' | 'center' | 'right' } : undefined}
+        >
+          {renderChildren(node, key)}
         </Tag>
       );
     }
 
     case 'bulletList':
-      return (
-        <ul key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </ul>
-      );
+      return <ul key={key}>{renderChildren(node, key)}</ul>;
 
     case 'orderedList':
-      return (
-        <ol key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </ol>
-      );
+      return <ol key={key}>{renderChildren(node, key)}</ol>;
 
     case 'listItem':
-      return (
-        <li key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </li>
-      );
+      return <li key={key}>{renderChildren(node, key)}</li>;
 
     case 'blockquote':
-      return (
-        <blockquote key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </blockquote>
-      );
+      return <blockquote key={key}>{renderChildren(node, key)}</blockquote>;
 
     case 'horizontalRule':
       return <hr key={key} />;
@@ -118,14 +93,14 @@ function renderNode(node: TiptapNode, key: string): ReactNode {
       return <br key={key} />;
 
     case 'image': {
-      const src = node.attrs?.src;
+      const src = node.attrs?.src as string | undefined;
       if (!src) return null;
       return (
         <img
           key={key}
           src={src}
-          alt={node.attrs?.alt ?? ''}
-          title={node.attrs?.title}
+          alt={(node.attrs?.alt as string | undefined) ?? ''}
+          title={node.attrs?.title as string | undefined}
           loading="lazy"
         />
       );
@@ -134,43 +109,29 @@ function renderNode(node: TiptapNode, key: string): ReactNode {
     case 'table':
       return (
         <table key={key}>
-          <tbody>
-            {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-          </tbody>
+          <tbody>{renderChildren(node, key)}</tbody>
         </table>
       );
 
     case 'tableRow':
-      return (
-        <tr key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </tr>
-      );
+      return <tr key={key}>{renderChildren(node, key)}</tr>;
 
     case 'tableCell':
-      return (
-        <td key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </td>
-      );
+      return <td key={key}>{renderChildren(node, key)}</td>;
 
     case 'tableHeader':
-      return (
-        <th key={key}>
-          {node.content?.map((c, i) => renderNode(c, `${key}-${i}`))}
-        </th>
-      );
+      return <th key={key}>{renderChildren(node, key)}</th>;
 
     case 'text':
-      return renderText(node as Extract<TiptapNode, { type: 'text' }>, key);
+      return renderText(node, key);
 
     default:
       return null;
   }
 }
 
-function renderText(node: { text: string; marks?: TiptapMark[] }, key: string): ReactNode {
-  let el: ReactNode = node.text;
+function renderText(node: AnyNode, key: string): ReactNode {
+  let el: ReactNode = node.text ?? '';
   for (const mark of node.marks ?? []) {
     if (mark.type === 'bold') el = <strong>{el}</strong>;
     else if (mark.type === 'italic') el = <em>{el}</em>;
@@ -178,8 +139,8 @@ function renderText(node: { text: string; marks?: TiptapMark[] }, key: string): 
     else if (mark.type === 'strike') el = <s>{el}</s>;
     else if (mark.type === 'code') el = <code>{el}</code>;
     else if (mark.type === 'link') {
-      const href = mark.attrs?.href ?? '#';
-      const target = mark.attrs?.target;
+      const href = (mark.attrs?.href as string | undefined) ?? '#';
+      const target = mark.attrs?.target as string | undefined;
       el = (
         <a
           href={href}
