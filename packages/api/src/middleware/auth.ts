@@ -95,7 +95,7 @@ export function requireRole(minimumRole: Role) {
 export async function signToken(payload: Omit<JwtPayload, 'exp'>): Promise<string> {
   return new jose.SignJWT(payload as unknown as jose.JWTPayload)
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('1h')
+    .setExpirationTime('24h')
     .sign(JWT_SECRET);
 }
 

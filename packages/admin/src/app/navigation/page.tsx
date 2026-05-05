@@ -144,7 +144,7 @@ export default function NavigationPage() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <div>
             <h1 style={styles.title}>導覽管理</h1>

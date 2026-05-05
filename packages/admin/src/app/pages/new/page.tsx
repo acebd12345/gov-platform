@@ -54,7 +54,7 @@ export default function NewPageEditor() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <button onClick={() => router.back()} style={styles.backBtn}>← 返回</button>
           <div style={styles.headerActions}>

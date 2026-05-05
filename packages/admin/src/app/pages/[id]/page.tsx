@@ -79,7 +79,7 @@ export default function EditPageEditor() {
     return (
       <div style={{ display: 'flex' }}>
         <Sidebar />
-        <main style={styles.main}><div style={{ padding: 60, textAlign: 'center', color: 'var(--color-text-muted)' }}>載入中...</div></main>
+        <main data-gov-main style={styles.main}><div style={{ padding: 60, textAlign: 'center', color: 'var(--color-text-muted)' }}>載入中...</div></main>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function EditPageEditor() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <button onClick={() => router.push('/pages')} style={styles.backBtn}>← 返回列表</button>
           <div style={styles.headerActions}>

@@ -17,6 +17,146 @@ export interface SiteInfo {
   domain: string | null;
   brandTokens: Record<string, string>;
   featureFlags: Record<string, boolean>;
+  homepageConfig: HomepageConfig;
+}
+
+export interface HeroSlideConfig {
+  title: string;
+  subtitle?: string;
+  body?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  imageUrl?: string;
+  /** 手機版背景圖（< 768px 時取代 imageUrl） */
+  imageUrlMobile?: string;
+}
+
+export interface EventCardConfig {
+  title: string;
+  dateRange: string;
+  venue?: string;
+  imageUrl?: string;
+  href?: string;
+}
+
+export interface FooterLink {
+  label: string;
+  href: string;
+}
+
+export interface HomepageConfig {
+  sections?: Partial<{
+    topUtility: boolean;
+    hero: boolean;
+    searchHero: boolean;
+    news: boolean;
+    events: boolean;
+    quickServices: boolean;
+    business: boolean;
+    externalServices: boolean;
+    map: boolean;
+    progress: boolean;
+    affiliates: boolean;
+    satisfaction: boolean;
+    liveData: boolean;
+    stats: boolean;
+    audienceSegments: boolean;
+    socialFeed: boolean;
+  }>;
+  hero?: HeroSlideConfig;
+  heroSlides?: HeroSlideConfig[];
+  heroIntervalSec?: number;
+  heroVariant?: 'carousel' | 'split' | 'minimal';
+  affiliates?: Array<{ name: string; href: string; abbr?: string; logoUrl?: string }>;
+  affiliatesVariant?: 'chip' | 'card' | 'list';
+  quickServices?: Array<{ label: string; href: string; icon: string }>;
+  quickServicesVariant?: 'grid' | 'chip' | 'compact';
+  businessCards?: Array<{ title: string; description: string; href: string; icon: string }>;
+  businessVariant?: 'stripe' | 'minimal' | 'wide';
+  newsVariant?: 'date-badge' | 'plain' | 'card-grid';
+  events?: { featured?: EventCardConfig; items?: EventCardConfig[]; variant?: 'featured' | 'equal' | 'timeline' };
+  satisfaction?: { title?: string; question?: string };
+  footer?: {
+    groups?: Array<{ title?: string; items: FooterLink[] }>;
+    openData?: { title?: string; items?: FooterLink[]; ctaLabel?: string; ctaHref?: string };
+  };
+  topUtility?: {
+    items?: Array<{ label: string; href: string; openNewTab?: boolean; emphasized?: boolean }>;
+  };
+  searchHero?: {
+    title?: string;
+    placeholder?: string;
+    action?: string;
+    hotKeywords?: string[];
+  };
+  externalServices?: {
+    title?: string;
+    variant?: 'image-card' | 'logo-grid' | 'banner';
+    items?: Array<{
+      title: string;
+      description?: string;
+      href: string;
+      imageUrl?: string;
+      badge?: string;
+    }>;
+  };
+  newsTabs?: {
+    tabs?: Array<{ label: string; filterType?: string; filterCategory?: string; moreHref?: string }>;
+  };
+  /** 業務專區改從 categories 自動帶（icon 由 slug → registry 對應） */
+  businessFromCategories?: boolean;
+  progress?: {
+    steps?: Array<{ label: string; date?: string }>;
+    currentIndex?: number;
+    caseInfo?: { id: string; title: string };
+  };
+  liveData?: {
+    title?: string;
+    variant?: 'dark' | 'light';
+    metrics?: Array<{
+      label: string;
+      value: string;
+      unit?: string;
+      status?: 'green' | 'yellow' | 'red' | 'neutral';
+      updatedAt?: string;
+      sourceHref?: string;
+      icon?: string;
+    }>;
+  };
+  stats?: {
+    title?: string;
+    variant?: 'card' | 'bare';
+    items?: Array<{
+      label: string;
+      value: string;
+      prefix?: string;
+      suffix?: string;
+      description?: string;
+      href?: string;
+    }>;
+  };
+  audienceSegments?: {
+    title?: string;
+    variant?: 'numbered' | 'icon' | 'image';
+    items?: Array<{
+      label: string;
+      description?: string;
+      href: string;
+      icon?: string;
+      abbr?: string;
+    }>;
+  };
+  socialFeed?: {
+    title?: string;
+    variant?: 'card' | 'masonry' | 'list';
+    items?: Array<{
+      platform: 'facebook' | 'instagram' | 'youtube' | 'threads' | 'twitter';
+      href: string;
+      imageUrl?: string;
+      caption?: string;
+      meta?: string;
+    }>;
+  };
 }
 
 export interface PageSummary {

@@ -41,6 +41,8 @@ export default function PagesListPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const isChiefOrAbove = user?.role === 'admin' || user?.role === 'editor_in_chief' || user?.isSuperAdmin;
 
@@ -86,6 +88,53 @@ export default function PagesListPage() {
   }
 
   const filteredPages = filter === 'all' ? pages : pages.filter((p) => p.status === filter);
+
+  // 批次操作 — 對選取的 pages 跑某個 action
+  async function bulkAction(
+    action: 'submit' | 'approve' | 'publish' | 'unpublish' | 'delete',
+    label: string
+  ) {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`對 ${ids.length} 筆執行「${label}」？`)) return;
+
+    setBulkRunning(true);
+    let ok = 0;
+    let fail = 0;
+    try {
+      for (const id of ids) {
+        try {
+          if (action === 'delete') {
+            await apiDelete(`/content/pages/${id}`, { tenant });
+          } else {
+            await apiPut(`/content/pages/${id}/${action}`, undefined, { tenant });
+          }
+          ok++;
+        } catch {
+          fail++;
+        }
+      }
+      await loadPages();
+      setSelected(new Set());
+      if (fail > 0) alert(`完成：${ok} 成功 / ${fail} 失敗（部分項目可能因狀態不符跳過）`);
+    } finally {
+      setBulkRunning(false);
+    }
+  }
+
+  const toggleSelected = (id: string) => {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const toggleAll = () => {
+    setSelected((s) =>
+      s.size === filteredPages.length ? new Set() : new Set(filteredPages.map((p) => p.id))
+    );
+  };
 
   function renderActions(page: PageItem) {
     const isLoading = actionLoading === page.id;
@@ -148,7 +197,7 @@ export default function PagesListPage() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <div>
             <h1 style={styles.title}>頁面管理</h1>
@@ -195,6 +244,47 @@ export default function PagesListPage() {
           ))}
         </div>
 
+        {/* 批次操作列 — 有選取項目時顯示 */}
+        {selected.size > 0 && isChiefOrAbove && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              background: 'var(--color-brand-light, #E8F0F8)',
+              border: '1px solid var(--color-brand)',
+              borderRadius: 'var(--radius)',
+              marginBottom: 12,
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 600 }}>已選 {selected.size} 筆</span>
+            <span style={{ flex: 1 }} />
+            <button onClick={() => bulkAction('submit', '送審')} disabled={bulkRunning} style={styles.actionBtnPrimary}>
+              批次送審
+            </button>
+            <button onClick={() => bulkAction('approve', '核准')} disabled={bulkRunning} style={styles.actionBtnSuccess}>
+              批次核准
+            </button>
+            <button onClick={() => bulkAction('publish', '發布')} disabled={bulkRunning} style={styles.actionBtnSuccess}>
+              批次發布
+            </button>
+            <button onClick={() => bulkAction('unpublish', '下線')} disabled={bulkRunning} style={styles.actionBtnDanger}>
+              批次下線
+            </button>
+            <button onClick={() => bulkAction('delete', '刪除')} disabled={bulkRunning} style={styles.actionBtnDanger}>
+              批次刪除
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              disabled={bulkRunning}
+              style={{ ...styles.actionBtn, marginLeft: 4 }}
+            >
+              取消選取
+            </button>
+          </div>
+        )}
+
         {/* Table */}
         <div style={styles.tableWrapper}>
           {loading ? (
@@ -205,6 +295,18 @@ export default function PagesListPage() {
             <table style={styles.table}>
               <thead>
                 <tr>
+                  {isChiefOrAbove && (
+                    <th style={{ ...styles.th, width: 36 }}>
+                      <input
+                        type="checkbox"
+                        aria-label="全選"
+                        checked={
+                          filteredPages.length > 0 && selected.size === filteredPages.length
+                        }
+                        onChange={toggleAll}
+                      />
+                    </th>
+                  )}
                   <th style={styles.th}>標題</th>
                   <th style={styles.th}>類型</th>
                   <th style={styles.th}>狀態</th>
@@ -217,6 +319,16 @@ export default function PagesListPage() {
                   const status = statusMap[page.status] ?? { label: page.status, color: '#6B7280', bg: '#F3F4F6' };
                   return (
                     <tr key={page.id} style={styles.tr}>
+                      {isChiefOrAbove && (
+                        <td style={styles.td}>
+                          <input
+                            type="checkbox"
+                            aria-label="選取"
+                            checked={selected.has(page.id)}
+                            onChange={() => toggleSelected(page.id)}
+                          />
+                        </td>
+                      )}
                       <td style={styles.td}>
                         <div style={styles.pageTitle}>{page.title || page.slug}</div>
                         <div style={styles.pageSlug}>/{page.slug}</div>

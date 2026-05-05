@@ -1,0 +1,157 @@
+/* =====================================================
+   RWD breakpoints + 子選單 hover 行為
+   只放跨元件、需要 media query 的樣式；單元件內樣式仍用 inline。
+   ===================================================== */
+
+/* 主選單 hover 顯示子選單（純 CSS） */
+.gov-nav-dropdown { display: none; }
+.gov-nav-item:hover > .gov-nav-dropdown,
+.gov-nav-item:focus-within > .gov-nav-dropdown {
+  display: block;
+}
+
+/* 首頁三欄 dashboard：>1024px 三欄、768–1024 兩欄、<768 單欄 */
+.gov-dashboard-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+/* 解 grid item 預設 min-width: auto 撐欄問題（nowrap 標題會把欄硬撐） */
+.gov-dashboard-row > * { min-width: 0; }
+@media (max-width: 1024px) {
+  .gov-dashboard-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .gov-dashboard-row > :nth-child(3) { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .gov-dashboard-row {
+    grid-template-columns: 1fr;
+  }
+  .gov-dashboard-row > :nth-child(3) { grid-column: auto; }
+}
+
+/* 同樣地對其他 grid 補上 min-width 防呆 */
+.gov-bottom-row > *,
+.gov-business-grid > *,
+.gov-affiliate-grid > *,
+.gov-external-grid > *,
+.gov-footer-grid > * { min-width: 0; }
+
+/* 業務專區：依卡數自適應（5 個局處中心 / 7 個業務區都能均分一列） */
+.gov-business-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+/* 底部兩欄（地圖 + 進度） */
+.gov-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .gov-bottom-row { grid-template-columns: 1fr; }
+}
+
+/* 對外服務大圖卡：依卡數自適應 */
+.gov-external-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* 附屬機關：依館所數量自適應 */
+.gov-affiliate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+/* ===== 區塊背景輪替（讓不同模組視覺有節奏） ===== */
+.gov-section-tint {
+  background: var(--color-bg-alt, #F8FAFB);
+}
+.gov-section-dark {
+  background: linear-gradient(135deg, #1F2937 0%, #0F1B2A 100%);
+  color: #E5E7EB;
+}
+.gov-section-accent-stripe {
+  position: relative;
+}
+.gov-section-accent-stripe::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--color-brand-accent, var(--color-brand-primary));
+}
+
+/* 即時數據面板 */
+.gov-live-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.gov-live-grid > * { min-width: 0; }
+
+/* 燈號脈動 */
+@keyframes gov-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+.gov-status-pulse {
+  animation: gov-pulse 1.8s ease-in-out infinite;
+}
+
+/* 統計數字 */
+.gov-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.gov-stats-grid > * { min-width: 0; }
+
+/* 分眾導覽 */
+.gov-audience-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.gov-audience-grid > * { min-width: 0; }
+
+/* 社群動態牆 */
+.gov-social-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.gov-social-grid > * { min-width: 0; }
+
+/* Header：主選單在窄螢幕收起來 */
+@media (max-width: 900px) {
+  .gov-header-nav { display: none; }
+}
+
+/* Footer 4 欄 → 2 → 1 */
+.gov-footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .gov-footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 540px) {
+  .gov-footer-grid { grid-template-columns: 1fr; }
+}
+
+/* A11y：字級調整。透過 html data-attr 改 root font-size */
+html[data-fs="sm"] { font-size: 93.75%; }   /* 15px */
+html[data-fs="md"] { font-size: 100%; }     /* 16px (default) */
+html[data-fs="lg"] { font-size: 112.5%; }   /* 18px */

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Container, Card, ArticleBody } from '@gov/ui';
+import { Container, Card, ArticleBody, SocialShare } from '@gov/ui';
 import { getTenantSlug } from '@/lib/tenant';
 import { fetchPage } from '@/lib/api';
 
@@ -72,6 +72,13 @@ export default async function NewsDetailPage({
         <Card padding="lg">
           <ArticleBody body={page.bodyJson} />
         </Card>
+
+        <div style={{ marginTop: 24 }}>
+          <SocialShare
+            url={`/news/${pageSlug}`}
+            title={page.title ?? '(未命名)'}
+          />
+        </div>
       </article>
     </Container>
   );

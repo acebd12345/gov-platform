@@ -69,7 +69,7 @@ services:
     build:
       context: .
       dockerfile: packages/api/Dockerfile
-    image: gov-platform-api:latest
+    image: asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/api:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -99,7 +99,7 @@ services:
       args:
         # Baked into the bundle at build time — must match the public URL.
         NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
-    image: gov-platform-admin:latest
+    image: asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/admin:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -117,7 +117,7 @@ services:
         NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
         # Server-side fetch path inside the compose network.
         API_BASE_URL: http://api:4000/api/v1
-    image: gov-platform-web:latest
+    image: asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/web:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production

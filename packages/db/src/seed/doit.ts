@@ -15,7 +15,148 @@ function rows(result: any): any[] {
 async function main() {
   console.log('🌱 開始 seed doit 租戶資料...\n');
 
-  // ── 1. 確認 doit 租戶存在，沒有就建立 ──
+  // ── 1. 確認 doit 租戶存在 + 注入 brand_tokens / homepage_config ──
+  // 政府藍 + 簡潔 + 對外服務卡風格（對應 doit.gov.taipei）
+  const brandTokens = JSON.stringify({
+    '--color-brand-primary': '#0C5299',
+    '--color-brand-secondary': '#E8F0F8',
+    '--color-brand-accent': '#0C5299',
+    '--color-bg': '#FFFFFF',
+    '--color-bg-alt': '#F8FAFB',
+    '--color-text': '#1A1D23',
+    '--color-text-muted': '#6B7280',
+    '--color-border': '#E2E8F0',
+    '--color-link': '#0C5299',
+    '--color-footer-bg': '#1F2937',
+    '--color-footer-text': '#D1D5DB',
+    '--color-tag-bg': '#0C5299',
+    '--font-heading': "'Noto Sans TC', system-ui, sans-serif",
+    en_name: 'DEPARTMENT OF INFORMATION TECHNOLOGY',
+    en_org: 'TAIPEI CITY GOVERNMENT',
+    address: '11008 臺北市信義區市府路 1 號',
+    phone: '(02) 2720-8889',
+    service_hours: '週一至週五 08:30–17:30',
+  });
+
+  const homepageConfig = JSON.stringify({
+    sections: {
+      topUtility: true,
+      hero: true,
+      searchHero: true,
+      news: true,
+      events: false,         // 資訊局沒這區
+      quickServices: false,  // 資訊局沒這區
+      business: true,
+      externalServices: true,
+      map: false,
+      progress: false,
+      affiliates: false,
+      satisfaction: true,
+    },
+    topUtility: {
+      items: [
+        { label: '網站導覽', href: '#' },
+        { label: 'English', href: '#' },
+        { label: '陳情系統', href: 'https://hello.gov.taipei', openNewTab: true },
+        { label: '常見問答', href: '#' },
+        { label: '台北通', href: 'https://id.gov.taipei', openNewTab: true, emphasized: true },
+      ],
+    },
+    heroSlides: [
+      {
+        title: 'AI IS IN TAIPEI',
+        subtitle: '智慧治理．資料驅動',
+        body: '推動智慧城市應用、資料治理、開源協作，打造市民有感的數位服務',
+        ctaLabel: '了解更多',
+        ctaHref: '/news',
+      },
+    ],
+    heroIntervalSec: 6,
+    searchHero: {
+      title: '搜尋資訊局服務',
+      placeholder: '請輸入關鍵字',
+      action: '/search',
+      hotKeywords: ['資料大平臺', '智慧城市', '台北通', '開源', 'API'],
+    },
+    quickServices: [],
+    businessCards: [
+      { title: '數位策略中心', description: '城市數位轉型策略\n與政策規劃', href: '#', icon: 'creative' },
+      { title: '資通安全中心', description: '市府資安治理\n與風險防護', href: '#', icon: 'heritage' },
+      { title: '系統研發中心', description: '系統開發、整合\n與雲端基礎建設', href: '#', icon: 'film' },
+      { title: '數據治理中心', description: '資料治理、開放資料\n與資料分析', href: '#', icon: 'book' },
+      { title: '數位創新中心', description: 'PoC 試行、開源協作\n與創新實驗', href: '#', icon: 'arts' },
+    ],
+    externalServices: {
+      title: '對外服務',
+      items: [
+        {
+          title: '臺北城市儀表板',
+          description: '市政指標即時視覺化',
+          href: 'https://citydashboard.taipei',
+          badge: 'DASHBOARD',
+        },
+        {
+          title: '智慧支付',
+          description: '繳費 ‧ 票證 ‧ 一站式',
+          href: 'https://pay.taipei',
+          badge: 'pay.taipei',
+        },
+        {
+          title: '資料大平臺',
+          description: '開放資料集 / API / 檔案',
+          href: 'https://data.taipei',
+          badge: 'OPEN DATA',
+        },
+        {
+          title: 'TaipeiPASS',
+          description: '台北通數位身分整合',
+          href: 'https://id.gov.taipei',
+          badge: '台北通',
+        },
+      ],
+    },
+    newsTabs: {
+      tabs: [
+        { label: '新聞稿', filterType: 'news', moreHref: '/news' },
+        { label: '影音專區', filterType: 'custom', moreHref: '/news' },
+        { label: '本府消息', filterType: 'about', moreHref: '/news' },
+        { label: '本府活動', filterType: 'service', moreHref: '/news' },
+      ],
+    },
+    satisfaction: {
+      title: '滿意度調查',
+      question: '您對本網站的整體滿意度為何？',
+    },
+    footer: {
+      groups: [
+        {
+          items: [
+            { label: '政府網站資料開放宣告', href: '#' },
+            { label: '隱私權及資訊安全政策', href: '#' },
+            { label: '聯絡我們', href: '#' },
+            { label: '雙語辭彙', href: '#' },
+          ],
+        },
+        {
+          items: [
+            { label: '我的E政府', href: 'https://www.gov.tw' },
+            { label: '臺北市政府', href: 'https://www.gov.taipei' },
+            { label: '無障礙檢測', href: '#' },
+          ],
+        },
+      ],
+      openData: {
+        title: '開放資料',
+        items: [
+          { label: 'data.taipei', href: 'https://data.taipei' },
+          { label: 'GitHub', href: 'https://github.com/' },
+        ],
+        ctaLabel: '查看更多',
+        ctaHref: 'https://data.taipei',
+      },
+    },
+  });
+
   let tenantId: string;
   const tenantResult = rows(await db.execute(
     sql`SELECT id FROM public.tenants WHERE slug = 'doit' LIMIT 1`
@@ -23,12 +164,24 @@ async function main() {
 
   if (tenantResult.length > 0) {
     tenantId = tenantResult[0].id;
+    await db.execute(sql`
+      UPDATE public.tenants
+         SET name = '資訊局',
+             domain = 'doit.gov.taipei',
+             brand_tokens = ${brandTokens}::jsonb,
+             homepage_config = ${homepageConfig}::jsonb
+       WHERE id = ${tenantId}
+    `);
   } else {
     console.log('⚠️  找不到 doit 租戶，自動建立...');
     const insertResult = rows(await db.execute(sql`
-      INSERT INTO public.tenants (slug, name, domain, brand_tokens, review_required)
-      VALUES ('doit', '資訊局', 'doit.gov.taipei', '{}', true)
-      ON CONFLICT (slug) DO UPDATE SET name = '資訊局'
+      INSERT INTO public.tenants (slug, name, domain, brand_tokens, homepage_config, review_required)
+      VALUES ('doit', '資訊局', 'doit.gov.taipei',
+              ${brandTokens}::jsonb, ${homepageConfig}::jsonb, true)
+      ON CONFLICT (slug) DO UPDATE SET
+        name = '資訊局',
+        brand_tokens = ${brandTokens}::jsonb,
+        homepage_config = ${homepageConfig}::jsonb
       RETURNING id
     `));
     tenantId = insertResult[0].id;

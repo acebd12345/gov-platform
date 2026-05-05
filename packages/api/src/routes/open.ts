@@ -40,6 +40,7 @@ app.get('/site', async (c) => {
       domain: data.domain,
       brandTokens: data.brandTokens,
       featureFlags: data.featureFlags,
+      homepageConfig: data.homepageConfig ?? {},
     },
     meta: { api: 'open/v1' },
   });

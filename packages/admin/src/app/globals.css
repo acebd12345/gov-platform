@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+/* ===== Admin RWD ===== */
+/* 小於 900px 自動收合 sidebar 為頂部漢堡，main 不再 marginLeft 240 */
+@media (max-width: 900px) {
+  aside[data-gov-sidebar] {
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-out;
+  }
+  aside[data-gov-sidebar][data-open="1"] {
+    transform: translateX(0);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  main[data-gov-main] {
+    margin-left: 0 !important;
+    padding: 16px !important;
+  }
+  .gov-mobile-menu-btn {
+    display: inline-flex !important;
+  }
+  /* 預覽面板在小螢幕也收合，手機別擠 */
+  aside.gov-preview-pane { display: none !important; }
+}
+.gov-mobile-menu-btn { display: none; }
+
 :root {
   /* Government Blue palette — professional, trustworthy */
   --color-brand: #0C5299;

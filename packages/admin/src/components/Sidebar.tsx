@@ -23,6 +23,7 @@ const navItems = [
   { href: '/navigation', label: '導覽管理', icon: '🔗' },
   { href: '/members', label: '成員管理', icon: '👥' },
   { href: '/settings', label: '版型設定', icon: '🎨' },
+  { href: '/modules', label: '首頁模組', icon: '🧩' },
   { href: '/audit', label: '稽核日誌', icon: '📋' },
 ];
 
@@ -76,8 +77,51 @@ export default function Sidebar() {
     router.push('/dashboard');
   };
 
+  // RWD: 小螢幕用漢堡控制
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <aside style={styles.sidebar}>
+    <>
+      {/* 漢堡按鈕（< 900px 才顯示，由 globals.css 控制） */}
+      <button
+        type="button"
+        className="gov-mobile-menu-btn"
+        onClick={() => setMobileOpen((v) => !v)}
+        aria-label="切換選單"
+        style={{
+          position: 'fixed',
+          top: 12,
+          left: 12,
+          zIndex: 30,
+          width: 40,
+          height: 40,
+          borderRadius: 8,
+          border: '1px solid var(--color-border)',
+          background: 'white',
+          cursor: 'pointer',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {mobileOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>}
+        </svg>
+      </button>
+
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 9,
+          }}
+          className="gov-mobile-overlay"
+        />
+      )}
+
+    <aside data-gov-sidebar data-open={mobileOpen ? '1' : '0'} style={styles.sidebar}>
       {/* Brand header with tenant switcher */}
       <div style={styles.brand}>
         <div style={styles.brandIcon}>
@@ -180,7 +224,13 @@ export default function Sidebar() {
         <button className="sidebar-logout" onClick={logout} style={styles.logoutBtn}>登出</button>
       </div>
 
-      {/* Hover styles for dropdown & buttons */}
+      {/* Hover styles for dropdown & buttons + RWD overlay */}
+      <style>{`
+        @media (max-width: 900px) {
+          .gov-mobile-overlay { display: block; }
+        }
+      `}</style>
+
       <style>{`
         .tenant-dropdown-item:hover {
           background: var(--color-brand-light) !important;
@@ -196,6 +246,7 @@ export default function Sidebar() {
         }
       `}</style>
     </aside>
+    </>
   );
 }
 

@@ -99,7 +99,7 @@ export default function TenantsPage() {
     return (
       <div style={{ display: 'flex' }}>
         <Sidebar />
-        <main style={styles.main}>
+        <main data-gov-main style={styles.main}>
           <div style={styles.forbidden}>
             <div style={styles.forbiddenIcon}>🔒</div>
             <h2 style={styles.forbiddenTitle}>權限不足</h2>
@@ -113,7 +113,7 @@ export default function TenantsPage() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <div>
             <h1 style={styles.title}>租戶管理</h1>

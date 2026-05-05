@@ -17,6 +17,19 @@
   --color-surface: #FFFFFF;
   --color-border: #E2E8F0;
 
+  /* Footer / dark sections */
+  --color-footer-bg: #1F2A26;
+  --color-footer-text: #D6CFC2;
+  --color-footer-heading: #FFFFFF;
+
+  /* Date badge (deep red) */
+  --color-date-badge: #A02C2C;
+  --color-date-badge-text: #FFFFFF;
+
+  /* Tag (warm gold by default) */
+  --color-tag-bg: #B89968;
+  --color-tag-text: #FFFFFF;
+
   /* Text */
   --color-text: #1A1D23;
   --color-text-muted: #6B7280;

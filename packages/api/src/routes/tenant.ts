@@ -35,6 +35,7 @@ app.get('/config', async (c) => {
       domain: tenantData.domain,
       brandTokens: tenantData.brandTokens,
       featureFlags: tenantData.featureFlags,
+      homepageConfig: tenantData.homepageConfig ?? {},
       reviewRequired: tenantData.reviewRequired,
     },
     meta: { tenant: tenant.tenantSlug },
@@ -55,6 +56,8 @@ app.put(
       name: z.string().min(1).max(255).optional(),
       brandTokens: z.record(z.string()).optional(),
       featureFlags: z.record(z.boolean()).optional(),
+      // 首頁模組設定 — 結構彈性，不在 zod 內逐一驗
+      homepageConfig: z.record(z.unknown()).optional(),
       reviewRequired: z.boolean().optional(),
     })
   ),
@@ -73,6 +76,7 @@ app.put(
     if (body.name) updates.name = body.name;
     if (body.brandTokens) updates.brandTokens = body.brandTokens;
     if (body.featureFlags) updates.featureFlags = body.featureFlags;
+    if (body.homepageConfig) updates.homepageConfig = body.homepageConfig;
     if (body.reviewRequired !== undefined) updates.reviewRequired = body.reviewRequired;
 
     await db

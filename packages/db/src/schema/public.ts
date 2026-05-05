@@ -18,6 +18,9 @@ export const tenants = pgTable('tenants', {
   domain: varchar('domain', { length: 255 }).unique(),
   brandTokens: jsonb('brand_tokens').default({}).$type<Record<string, string>>(),
   featureFlags: jsonb('feature_flags').default({}).$type<Record<string, boolean>>(),
+  /** 首頁模組設定（hero / affiliates / quickServices / section toggles）。
+   *  結構由 packages/shared/src/types/index.ts 的 HomepageConfig 定義。 */
+  homepageConfig: jsonb('homepage_config').default({}).$type<Record<string, unknown>>(),
   reviewRequired: boolean('review_required').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

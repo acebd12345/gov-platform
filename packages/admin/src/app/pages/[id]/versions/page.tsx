@@ -100,7 +100,7 @@ export default function VersionHistoryPage() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <button onClick={() => router.push(`/pages/${pageId}`)} style={styles.backBtn}>← 返回編輯</button>
           <h1 style={styles.title}>版本歷史</h1>

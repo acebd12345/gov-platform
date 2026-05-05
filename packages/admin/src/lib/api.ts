@@ -37,10 +37,16 @@ export async function api<T>(path: string, options: FetchOptions = {}): Promise<
     }
   }
 
-  const res = await fetch(url.toString(), {
-    ...fetchOpts,
-    headers,
-  });
+  let res = await fetch(url.toString(), { ...fetchOpts, headers });
+
+  // 401 → 嘗試用 refreshToken 換新 access token，再 retry 一次
+  if (res.status === 401 && typeof window !== 'undefined') {
+    const refreshed = await tryRefresh();
+    if (refreshed) {
+      headers['Authorization'] = `Bearer ${refreshed}`;
+      res = await fetch(url.toString(), { ...fetchOpts, headers });
+    }
+  }
 
   const data = await res.json();
 
@@ -49,6 +55,41 @@ export async function api<T>(path: string, options: FetchOptions = {}): Promise<
   }
 
   return data as T;
+}
+
+let refreshing: Promise<string | null> | null = null;
+
+/** 用 refreshToken 換新 access token；同時間多個 401 共用一個 refresh promise。 */
+async function tryRefresh(): Promise<string | null> {
+  if (refreshing) return refreshing;
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) return null;
+
+  refreshing = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/admin/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) {
+        // refresh 也壞了 → 清掉 token，下一次 401 會被頁面接到再導去 login
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        return null;
+      }
+      const json = await res.json();
+      const newToken: string | undefined = json?.data?.accessToken;
+      if (newToken) {
+        localStorage.setItem('accessToken', newToken);
+        return newToken;
+      }
+      return null;
+    } finally {
+      refreshing = null;
+    }
+  })();
+  return refreshing;
 }
 
 export class ApiError extends Error {

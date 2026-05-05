@@ -64,7 +64,7 @@ export default function MediaPage() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={styles.main}>
+      <main data-gov-main style={styles.main}>
         <header style={styles.header}>
           <div>
             <h1 style={styles.title}>媒體庫</h1>

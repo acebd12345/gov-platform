@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import bcryptjs from 'bcryptjs';
 const { compare, hash } = bcryptjs;
 import { signToken, signRefreshToken } from '../middleware/auth.js';
+import * as jose from 'jose';
 import type { TenantContext } from '../middleware/tenant.js';
 import type { Role } from '@gov/shared';
 import svgCaptcha from 'svg-captcha';
@@ -189,12 +190,46 @@ app.get('/me/tenants', async (c) => {
  * Refresh access token using refresh token.
  */
 app.post('/admin/refresh', async (c) => {
-  const body = await c.req.json<{ refreshToken: string }>();
-  // In production: verify refresh token, check revocation list, etc.
-  // Simplified for Phase 1.
-  return c.json({
-    error: { code: 'NOT_IMPLEMENTED', message: 'Refresh token endpoint – coming soon' },
-  }, 501);
+  const body = await c.req.json<{ refreshToken: string }>().catch(() => ({} as any));
+  if (!body?.refreshToken) {
+    return c.json({ error: { code: 'BAD_REQUEST', message: '缺少 refreshToken' } }, 400);
+  }
+
+  const secret = new TextEncoder().encode(
+    process.env.JWT_SECRET ?? 'dev-secret-change-in-production'
+  );
+
+  try {
+    const { payload } = await jose.jwtVerify(body.refreshToken, secret, { algorithms: ['HS256'] });
+    const userId = payload.sub as string | undefined;
+    const type = (payload as any).type as string | undefined;
+    if (!userId || type !== 'refresh') {
+      return c.json({ error: { code: 'INVALID_TOKEN', message: 'Refresh token 無效' } }, 401);
+    }
+
+    // Look up user + tenant member（取第一筆 tenant 給 access token）
+    const user = await db.query.users.findFirst({
+      where: (u, { eq }) => eq(u.id, userId),
+    });
+    if (!user) {
+      return c.json({ error: { code: 'NOT_FOUND', message: '使用者不存在' } }, 404);
+    }
+
+    const member = await db.query.tenantMembers.findFirst({
+      where: (m, { eq }) => eq(m.userId, userId),
+    });
+
+    const accessToken = await signToken({
+      sub: userId,
+      tenant_id: member?.tenantId ?? '',
+      role: (member?.role as any) ?? 'viewer',
+      is_super_admin: !!user.isSuperAdmin,
+    });
+
+    return c.json({ data: { accessToken } });
+  } catch {
+    return c.json({ error: { code: 'INVALID_TOKEN', message: 'Refresh token 過期或無效' } }, 401);
+  }
 });
 
 /**

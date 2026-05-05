@@ -26,13 +26,19 @@ jobs:
     - name: Build and Push Docker Images
       run: |
         # 使用 Artifact Registry 作為私有映像檔庫
-        TAG=asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/api:latest
-        docker build -t $TAG -f packages/api/Dockerfile .
-        docker push $TAG
+        REGISTRY=asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform
         
-        ADMIN_TAG=asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/admin:latest
-        docker build -t $ADMIN_TAG -f packages/admin/Dockerfile .
-        docker push $ADMIN_TAG
+        echo "Building API..."
+        docker build -t $REGISTRY/api:latest -f packages/api/Dockerfile .
+        docker push $REGISTRY/api:latest
+        
+        echo "Building Admin..."
+        docker build -t $REGISTRY/admin:latest -f packages/admin/Dockerfile .
+        docker push $REGISTRY/admin:latest
+
+        echo "Building Web..."
+        docker build -t $REGISTRY/web:latest -f packages/web/Dockerfile .
+        docker push $REGISTRY/web:latest
 
     - name: Deploy to VM via SSH
       uses: appleboy/ssh-action@v1.0.3
