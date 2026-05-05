@@ -59,6 +59,10 @@ export function PreviewPane({ tenant, refreshKey = 0, draft }: PreviewPaneProps)
     setTs(Date.now());
   }, [refreshKey]);
 
+  // 用 ref 保存最新 draft，避免 ready 事件監聽器抓到舊閉包
+  const draftRef = useRef(draft);
+  useEffect(() => { draftRef.current = draft; }, [draft]);
+
   // 即時 draft 推送
   useEffect(() => {
     if (!draft) return;
@@ -68,6 +72,23 @@ export function PreviewPane({ tenant, refreshKey = 0, draft }: PreviewPaneProps)
       win.postMessage({ type: 'gov-preview-draft', draft }, '*');
     } catch {}
   }, [draft]);
+
+  // iframe 載入完成後，子頁會發 'gov-preview-ready'，
+  // 父端收到就把當前 draft 重新推一次（避免初次載入或 reload 後遺失最新狀態）
+  useEffect(() => {
+    function onReady(e: MessageEvent) {
+      if (e.data?.type !== 'gov-preview-ready') return;
+      const d = draftRef.current;
+      if (!d) return;
+      const win = iframeRef.current?.contentWindow;
+      if (!win) return;
+      try {
+        win.postMessage({ type: 'gov-preview-draft', draft: d }, '*');
+      } catch {}
+    }
+    window.addEventListener('message', onReady);
+    return () => window.removeEventListener('message', onReady);
+  }, []);
 
   if (!tenant) return null;
   if (!hydrated) return null;
