@@ -13,6 +13,7 @@
     "@gov/shared": "*",
     "@hono/node-server": "^1.13.0",
     "@hono/zod-validator": "^0.4.0",
+    "axios": "^1.16.0",
     "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.6.0",

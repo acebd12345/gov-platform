@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
-import { db, withTenantSchema, tenantSchema } from '@gov/db';
+import { db, withTenantSchema, tenantSchema, publicSchema } from '@gov/db';
 import { eq, desc, and, sql, count } from 'drizzle-orm';
 import type { TenantContext } from '../middleware/tenant.js';
+import axios from 'axios';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 type Env = { Variables: { tenant: TenantContext } };
 
@@ -340,6 +345,101 @@ app.get('/media', async (c) => {
       api: 'open/v1',
     },
   });
+});
+
+/**
+ * POST /api/v1/open/import-culture
+ * 一鍵匯入文化局開放資料（含附件下載）。
+ */
+app.post('/import-culture', async (c) => {
+  const tenant = c.get('tenant');
+  if (tenant.tenantSlug !== 'culture') {
+    return c.json({ error: { message: '此操作僅限文化局租戶' } }, 403);
+  }
+
+  const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.resolve(process.cwd(), 'uploads');
+  const xmlUrl = 'https://culture.gov.taipei/OpenData.aspx?SN=EDA96F513B2ADDB2';
+  
+  try {
+    const res = await axios.get(xmlUrl, { responseType: 'text' });
+    const items = res.data.split('<Data>').slice(1);
+    const imported = [];
+
+    for (const item of items) {
+      const titleMatch = item.match(/<Column_5 name="title">(.*?)<\/Column_5>/);
+      const contentMatch = item.match(/<Column_6 name="內容">(.*?)<\/Column_6>/);
+      const snMatch = item.match(/<Column_0 name="DataSN">(.*?)<\/Column_0>/);
+      const filesMatch = item.match(/<Column_8 name="相關檔案">(.*?)<\/Column_8>/);
+      const imagesMatch = item.match(/<Column_10 name="相關圖片">(.*?)<\/Column_10>/);
+      const videosMatch = item.match(/<Column_11 name="相關影音">(.*?)<\/Column_11>/);
+
+      if (!titleMatch || !contentMatch) continue;
+
+      const title = titleMatch[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      const content = contentMatch[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+      const sn = snMatch ? snMatch[1] : Date.now().toString();
+      const slug = `news-${sn}`;
+
+      // Process attachments
+      const allAttachments = [
+        ...JSON.parse((imagesMatch?.[1] || '[]').replace(/&quot;/g, '"').replace(/&amp;/g, '&')),
+        ...JSON.parse((filesMatch?.[1] || '[]').replace(/&quot;/g, '"').replace(/&amp;/g, '&')),
+        ...JSON.parse((videosMatch?.[1] || '[]').replace(/&quot;/g, '"').replace(/&amp;/g, '&')),
+      ];
+
+      const mediaIds = [];
+      for (const att of allAttachments) {
+        try {
+          const fileRes = await axios.get(att.url, { responseType: 'arraybuffer' });
+          const buffer = Buffer.from(fileRes.data);
+          const ext = path.extname(att.url.split('?')[0]) || '.bin';
+          const storageKey = `culture/imported/${sn}/${crypto.randomBytes(4).toString('hex')}${ext}`;
+          const fullPath = path.join(UPLOAD_DIR, storageKey);
+
+          fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+          fs.writeFileSync(fullPath, buffer);
+
+          const [m] = await withTenantSchema('culture', async (tx) => {
+            return tx.insert(tenantSchema.media).values({
+              filename: att.title || path.basename(storageKey),
+              storageKey,
+              cdnUrl: `/uploads/${storageKey}`,
+              mimeType: fileRes.headers['content-type'] || 'application/octet-stream',
+              fileSizeBytes: buffer.length,
+            }).returning();
+          });
+          mediaIds.push(m.id);
+        } catch (e) {
+          console.error(`Failed to download attachment: ${att.url}`, e);
+        }
+      }
+
+      // Create Page
+      await withTenantSchema('culture', async (tx) => {
+        const [page] = await tx.insert(tenantSchema.pages).values({
+          slug,
+          title: title.substring(0, 255),
+          status: 'published',
+        }).onConflictDoNothing().returning();
+
+        if (page) {
+          await tx.insert(tenantSchema.pageVersions).values({
+            pageId: page.id,
+            title: title.substring(0, 255),
+            content,
+            status: 'published',
+            versionNumber: 1,
+          });
+        }
+      });
+
+      imported.push({ title, slug });
+    }
+
+    return c.json({ data: { message: '匯入完成', count: imported.length, items: imported } });
+  } catch (err: any) {
+    return c.json({ error: { message: err.message } }, 500);
+  }
 });
 
 export default app;
