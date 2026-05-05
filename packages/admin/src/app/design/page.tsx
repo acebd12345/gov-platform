@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/auth-context';
 import { apiGet, apiPut } from '@/lib/api';
 import type { HomepageConfig, HeroConfig } from '@gov/shared';
 
+const WEB_BASE = process.env.NEXT_PUBLIC_WEB_URL ?? 'http://localhost:3002';
+
 export default function DesignPage() {
   const { tenant } = useAuth();
   const [config, setConfig] = useState<HomepageConfig>({

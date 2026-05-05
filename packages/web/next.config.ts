@@ -8,6 +8,7 @@ const __dirname = path.dirname(__filename);
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@gov/shared', '@gov/ui'],
+  trailingSlash: true, // 增加 Nginx 相容性
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
 
