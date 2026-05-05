@@ -75,11 +75,12 @@ const DEFAULT_BUSINESS = [
 ];
 
 const DEFAULT_HERO: HeroSlideConfig = {
-  title: '文化．臺北',
-  subtitle: '藝述城市的日常',
-  body: '探索城市文化底蘊，感受臺北的藝文能量',
-  ctaLabel: '探索更多',
+  title: '臺北市政府',
+  subtitle: '宜居永續．光榮城市',
+  body: '以科技驅動城市創新，以文化深耕市民生活。為您提供最便捷、透明、有感的高品質政府服務。',
+  ctaLabel: '探索市政服務',
   ctaHref: '/news',
+  imageUrl: '/taiwan_gov_hero.png', // 使用剛產生的美圖
 };
 
 const DEFAULT_EVENTS = {

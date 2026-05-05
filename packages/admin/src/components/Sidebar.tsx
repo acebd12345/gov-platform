@@ -19,11 +19,9 @@ const navItems = [
   { href: '/dashboard', label: '儀表板', icon: '📊' },
   { href: '/pages', label: '頁面管理', icon: '📄' },
   { href: '/media', label: '媒體庫', icon: '🖼' },
-  { href: '/categories', label: '分類管理', icon: '📁' },
+  { href: '/design', label: '首頁設計', icon: '🎨' },
   { href: '/navigation', label: '導覽管理', icon: '🔗' },
-  { href: '/members', label: '成員管理', icon: '👥' },
-  { href: '/settings', label: '版型設定', icon: '🎨' },
-  { href: '/modules', label: '首頁模組', icon: '🧩' },
+  { href: '/settings', label: '版型與色彩', icon: '🌈' },
   { href: '/audit', label: '稽核日誌', icon: '📋' },
 ];
 
