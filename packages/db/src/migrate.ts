@@ -10,7 +10,13 @@ async function main() {
   const migrationClient = postgres(DATABASE_URL, { max: 1 });
   const db = drizzle(migrationClient);
 
-  await migrate(db, { migrationsFolder: './src/migrations' });
+  const path = await import('path');
+  const { fileURLToPath } = await import('url');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  
+  await migrate(db, { 
+    migrationsFolder: path.join(__dirname, 'migrations') 
+  });
 
   console.log('Migrations complete.');
   await migrationClient.end();
