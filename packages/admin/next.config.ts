@@ -8,12 +8,8 @@ const __dirname = path.dirname(__filename);
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@gov/shared'],
-  // standalone produces a self-contained server build under .next/standalone
-  // including only the node_modules actually used at runtime. This keeps the
-  // production image small and avoids needing the whole monorepo at runtime.
+  basePath: '/admin', // 讓後台知道自己住在 /admin 底下
   output: 'standalone',
-  // The standalone tracer needs to know where the monorepo root is so it
-  // copies workspace packages (e.g. @gov/shared) into .next/standalone.
   outputFileTracingRoot: path.join(__dirname, '../../'),
 };
 
