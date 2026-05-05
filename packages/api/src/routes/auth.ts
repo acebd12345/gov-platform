@@ -31,6 +31,9 @@ app.get('/captcha', async (c) => {
     noise: 2,
     color: true,
     background: '#f0f0f0',
+    width: 150,
+    height: 50,
+    fontSize: 50,
   });
   const id = uuidv4();
   await redis.set(`captcha:${id}`, captcha.text.toLowerCase(), 'EX', 300); // Valid for 5 minutes

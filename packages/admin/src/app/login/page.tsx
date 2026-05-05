@@ -270,7 +270,8 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
   },
   captchaImg: {
-    height: 42,
+    height: 50,
+    minWidth: 150,
     background: '#f0f0f0',
     borderRadius: 'var(--radius)',
     cursor: 'pointer',
