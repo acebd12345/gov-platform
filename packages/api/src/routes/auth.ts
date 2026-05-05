@@ -8,12 +8,33 @@ const { compare, hash } = bcryptjs;
 import { signToken, signRefreshToken } from '../middleware/auth.js';
 import type { TenantContext } from '../middleware/tenant.js';
 import type { Role } from '@gov/shared';
+import svgCaptcha from 'svg-captcha';
+import { redis } from '../lib/redis.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const app = new Hono<{ Variables: { tenant: TenantContext } }>();
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  captchaId: z.string(),
+  captchaValue: z.string(),
+});
+
+/**
+ * GET /api/v1/auth/captcha
+ * Generate a graphical captcha.
+ */
+app.get('/captcha', async (c) => {
+  const captcha = svgCaptcha.create({
+    size: 4,
+    noise: 2,
+    color: true,
+    background: '#f0f0f0',
+  });
+  const id = uuidv4();
+  await redis.set(`captcha:${id}`, captcha.text.toLowerCase(), 'EX', 300); // Valid for 5 minutes
+  return c.json({ data: { id, svg: captcha.data } });
 });
 
 /**
@@ -21,8 +42,16 @@ const loginSchema = z.object({
  * Backend admin login with email + password.
  */
 app.post('/admin/login', zValidator('json', loginSchema), async (c) => {
-  const { email, password } = c.req.valid('json');
+  const { email, password, captchaId, captchaValue } = c.req.valid('json');
   const tenant = c.get('tenant');
+
+  // Verify Captcha
+  const storedCaptcha = await redis.get(`captcha:${captchaId}`);
+  if (!storedCaptcha || storedCaptcha !== captchaValue.toLowerCase()) {
+    return c.json({ error: { code: 'INVALID_CAPTCHA', message: '驗證碼錯誤或已過期' } }, 400);
+  }
+  // Delete captcha after use
+  await redis.del(`captcha:${captchaId}`);
 
   // Find user
   const user = await db.query.users.findFirst({

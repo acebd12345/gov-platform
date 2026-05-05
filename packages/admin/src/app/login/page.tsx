@@ -1,17 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { apiPost } from '@/lib/api';
+import { apiGet, apiPost } from '@/lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [captcha, setCaptcha] = useState({ id: '', svg: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    loadCaptcha();
+  }, []);
+
+  async function loadCaptcha() {
+    try {
+      const res = await apiGet<{ data: { id: string; svg: string } }>('/auth/captcha');
+      setCaptcha(res.data);
+      setCaptchaInput('');
+    } catch {
+      setError('無法載入驗證碼');
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,12 +41,18 @@ export default function LoginPage() {
           refreshToken: string;
           user: { id: string; email: string; role: string; isSuperAdmin: boolean };
         };
-      }>('/auth/admin/login', { email, password });
+      }>('/auth/admin/login', {
+        email,
+        password,
+        captchaId: captcha.id,
+        captchaValue: captchaInput
+      });
 
       login(res.data.accessToken, res.data.refreshToken, res.data.user);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message ?? '登入失敗');
+      loadCaptcha(); // Refresh captcha on failure
     } finally {
       setLoading(false);
     }
@@ -88,13 +110,30 @@ export default function LoginPage() {
             />
           </label>
 
+          <label style={styles.label}>
+            <span style={styles.labelText}>驗證碼</span>
+            <div style={styles.captchaRow}>
+              <input
+                type="text"
+                value={captchaInput}
+                onChange={(e) => setCaptchaInput(e.target.value)}
+                placeholder="輸入驗證碼"
+                required
+                style={{ ...styles.input, flex: 1 }}
+              />
+              <div
+                style={styles.captchaImg}
+                dangerouslySetInnerHTML={{ __html: captcha.svg }}
+                onClick={loadCaptcha}
+                title="點擊更換驗證碼"
+              />
+            </div>
+          </label>
+
           <button type="submit" disabled={loading} style={styles.button}>
             {loading ? '登入中...' : '登入'}
           </button>
 
-          <p style={styles.devHint}>
-            開發帳號：admin@gov.taipei / admin123
-          </p>
         </form>
       </div>
     </div>
@@ -224,5 +263,21 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     marginTop: 8,
     opacity: 0.6,
+  },
+  captchaRow: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center',
+  },
+  captchaImg: {
+    height: 42,
+    background: '#f0f0f0',
+    borderRadius: 'var(--radius)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    border: '1px solid var(--color-border)',
   },
 };
