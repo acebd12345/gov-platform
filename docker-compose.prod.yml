@@ -99,6 +99,7 @@ services:
       args:
         # Baked into the bundle at build time — must match the public URL.
         NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+        NEXT_PUBLIC_WEB_URL: ${PUBLIC_WEB_URL}
     image: asia-east1-docker.pkg.dev/doit-digiiinova-website/gov-platform/admin:latest
     restart: unless-stopped
     environment:

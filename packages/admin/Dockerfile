@@ -31,6 +31,8 @@ COPY packages/admin  ./packages/admin
 # Build NEXT_PUBLIC_* env vars are baked into the bundle, so accept them here.
 ARG NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_WEB_URL=http://localhost:3002
+ENV NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL}
 
 RUN npm run build --workspace=packages/admin
 
